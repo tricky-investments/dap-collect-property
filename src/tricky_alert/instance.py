@@ -8,9 +8,9 @@ from email.mime.image import MIMEImage
 from email.mime.application import MIMEApplication
 from email.mime.audio import MIMEAudio
 
-from email_type import Email
-from email_type.receiver import Receiver
-from email_type.sender import Sender
+from .email_type import Email
+from .email_type.receiver import Receiver
+from .email_type.sender import Sender
 
 
 class EmailInstance:
