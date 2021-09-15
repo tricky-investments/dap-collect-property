@@ -21,10 +21,43 @@ def main():
     if options.development:
         # This is a development run
         collector.run_dev(options=options, settings=settings)
+        exit()
+
+    plan = collector.generate_tasks(options=options, settings=settings)
+    data = dict(options)
+    if isinstance(plan, list):
+        for task in plan:
+            try:
+                task.load_settings(settings=settings)
+                task.load_parameters(params=data)
+                success, data = task.run()
+
+                if not success:
+                    collector.report_error(data)
+                    break
+
+            except Exception as e:
+                log.error(str(e))
+                collector.report_error({'error': str(e)})
+                break
+
+    elif plan is not None:
+        try:
+            plan.load_settings(settings=settings)
+            plan.load_parameters(params=data)
+            success, data = plan.run()
+
+            if not success:
+                collector.report_error(data)
+
+        except Exception as e:
+            log.error(str(e))
+            collector.report_error({'error': str(e)})
 
 
 def grab_options(parser: OptionParser):
     parser.add_option('-d', action='store_true', default=False, dest='development')
+    parser.add_option('-t', action='store', dest='task_type')
 
 
 if __name__ == '__main__':
