@@ -3,7 +3,7 @@ from optparse import OptionParser
 import os
 import requests
 
-from property import tasks
+from .tasks import search, process
 from tricky_alert import email_type
 from tricky_alert.instance import EmailInstance
 
@@ -12,16 +12,27 @@ COLLECTOR_DIRECTORY = 'property'
 
 
 def grab_collector_options(parser: OptionParser):
-    parser.add_option('-l', '--price_min', action='store', type='int', dest='price_min')
-    parser.add_option('-h', '--price_max', action='store', type='int', dest='price_max')
-    parser.add_option('-t', '--prop_type', action='store', dest='prop_type')
-    parser.add_option('f', '--features', action='append', dest='features')
-    parser.add_option('-a', '--city', action='store', dest='city')
-    parser.add_option('-s', '--state_code', action='store', dest='state_code')
+
+    parser.add_option('--price_min', action='store', type='int', dest='price_min')
+    parser.add_option('--price_max', action='store', type='int', dest='price_max')
+    parser.add_option('--prop_type', action='store', dest='prop_type')
+    parser.add_option('--features', action='append', dest='features')
+    parser.add_option('--city', action='store', dest='city')
+    parser.add_option('--state_code', action='store', dest='state_code')
     parser.add_option('--offset', action='store', dest='offset')
     parser.add_option('--limit', action='store', dest='limit')
+    parser.add_option('--postal_code', action='store', dest='postal_code')
+
     # MORTGAGE OPTIONS HERE
-    parser.add_option('-c', '-calculation', action='store', dest='calculation', default='traditionals')
+    parser.add_option('--downpayment', action='store', dest='downpayment')
+    parser.add_option('--dp_type', action='store', dest='downpayment_type')
+    parser.add_option('--term', action='store', dest='term')
+    parser.add_option('--pmi', action='store', dest='pmi')
+    parser.add_option('--loan_type', action='store', dest='loan_type')
+    parser.add_option('--refi', action='store_true', default=False, dest='refi')
+
+    # CALCULATION OPTIONS HERE
+    parser.add_option('--calculation', action='store', dest='calculation', default='traditionals')
     parser.add_option('--cap_rate', action='store', dest='cap_rate')
     parser.add_option('--monthly_income', action='store', dest='monthly_income')
     parser.add_option('--roi', action='store', dest='roi')
@@ -32,18 +43,20 @@ def grab_collector_options(parser: OptionParser):
 def set_settings():
     settings = {
         'realty_in_us_config': {
-            'realty_in_us_host': os.getenv('REALTY_IN_US_HOST'),
-            'realty_in_us_key': os.getenv('REALTY_IN_US_KEY')
+            'x-rapidapi-host': os.getenv('REALTY_IN_US_HOST'),
+            'x-rapidapi-key': os.getenv('REALTY_IN_US_KEY')
         },
         'us_real_estate_config': {
-            'us_real_estate_host': os.getenv('US_REAL_ESTATE_HOST'),
-            'us_real_estate_key': os.getenv('US_REAL_ESTATE_KEY')
+            'x-rapidapi-host': os.getenv('US_REAL_ESTATE_HOST'),
+            'x-rapidapi-key': os.getenv('US_REAL_ESTATE_KEY')
         },
         'tricky_alert_config': {
             'receiver_emails': json.loads(os.getenv('RECEIVER_EMAILS')),
             'sender_email': os.getenv('SENDER_EMAIL'),
             'sender_pass': os.getenv('SENDER_PASS')
-        }
+        },
+        'mortgage_calc_url': os.getenv('MORTGAGE_CALCULATOR_URL'),
+        'last_run': os.getenv('LAST_RUN')
     }
 
     return settings
@@ -57,19 +70,19 @@ class Collector:
 
     def generate_tasks(self, options):
 
-        if options.__dict__()['job_type'] is None:
+        if options.__dict__['task_type'] is None:
             return None
 
-        if options.job_type == 'search':
-            search_task = tasks.search.SearchPropertiesTask(log=self.log, collector=self)
-            process_task = tasks.process.ProcessPropertiesTask(log=self.log, collector=self)
+        if options.task_type == 'search':
+            search_task = search.SearchPropertiesTask(log=self.log, collector=self)
+            process_task = process.ProcessPropertiesTask(log=self.log, collector=self)
 
         return [search_task, process_task]
 
     def report_error(self, data):
 
         sender = email_type.sender.Sender(os.getenv('SENDER_EMAIL'), os.getenv('SENDER_PASS'))
-        receiver = email_type.sender.Sender('troy.fintech@gmail.com')
+        receiver = email_type.receiver.Receiver('troy.fintech@gmail.com', 'Troy', 'Stanich')
         instance = EmailInstance(sender)
         instance.add_recipients([receiver])
         email = email_type.Email(f"Error with {self.name} Collector", data['error'])

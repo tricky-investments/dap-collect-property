@@ -23,8 +23,8 @@ def main():
         collector.run_dev(options=options, settings=settings)
         exit()
 
-    plan = collector.generate_tasks(options=options, settings=settings)
-    data = dict(options)
+    plan = collector.generate_tasks(options=options)
+    data = vars(options)
     if isinstance(plan, list):
         for task in plan:
             try:

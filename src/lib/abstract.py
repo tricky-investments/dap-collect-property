@@ -28,3 +28,17 @@ class Api:
     @abstractmethod
     def _call_endpoint(self, method, endpoint, headers, params):
         pass
+
+
+class Crawler:
+
+    def __init__(self, url):
+        self.url = url
+
+    @abstractmethod
+    def initiate_params(self, params):
+        pass
+
+    @abstractmethod
+    def run(self):
+        pass
