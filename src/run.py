@@ -25,6 +25,7 @@ def main():
 
     plan = collector.generate_tasks(options=options)
     data = vars(options)
+
     if isinstance(plan, list):
         for task in plan:
             try:
@@ -37,6 +38,7 @@ def main():
                     break
 
             except Exception as e:
+                raise e
                 log.error(str(e))
                 collector.report_error({'error': str(e)})
                 break

@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 import json
+import os
 import requests
 
 import scrapy
@@ -81,6 +82,51 @@ class MortgageCalculatorCrawler(Crawler):
                 payment = payment.replace(i, '')
 
         return float(payment)
+
+
+class ZillowRentEstimateCrawler(Crawler):
+
+    def initiate_params(self, params):
+        self.params = {}
+        keys = ['address', 'address_formatted']
+        for key in keys:
+            if key in params.keys():
+                self.params.update({key: params[key]})
+
+    def construct_start_url(self, address):
+        start_url = self.url + '/rental-manager/growth/proxy/rental-manager-api/api/v1/properties/addresses' \
+                              '/autocomplete?partialAddress'
+
+        start_url += address['line'].strip().replace(' ', '+').lower() + ',+' + address['city'].strip().lower()
+        + '+' + address['state_code'].strip().lower()
+
+        return start_url
+
+    def run(self):
+
+        address = self.params['address']
+        start_url = self.construct_start_url(address)
+
+        response = requests.request('GET', start_url)
+        suggestions = json.loads(response.text)['addresses']
+
+        found = None
+        if len(suggestions) == 0:
+            # CHECK FOR UNIT AND TRY AGAIN
+            if 'unit' in address['line'].lower():
+                address_pieces = address['line'].lower().split('unit')
+
+            elif 'apt' in address['line'].lower():
+                address_pieces = address['line'].lower().split('unit')
+
+        else:
+            for sug in suggestions:
+                if sug['city'] == address['city'] and sug['street'] == address['line']:
+                    found = sug
+
+        if found is None:
+            # CALL BACKUP RENT ESTIMATE
+            pass
 
 
 if __name__ == '__main__':

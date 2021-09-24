@@ -12,7 +12,6 @@ COLLECTOR_DIRECTORY = 'property'
 
 
 def grab_collector_options(parser: OptionParser):
-
     parser.add_option('--price_min', action='store', type='int', dest='price_min')
     parser.add_option('--price_max', action='store', type='int', dest='price_max')
     parser.add_option('--prop_type', action='store', dest='prop_type')
@@ -30,6 +29,16 @@ def grab_collector_options(parser: OptionParser):
     parser.add_option('--pmi', action='store', dest='pmi')
     parser.add_option('--loan_type', action='store', dest='loan_type')
     parser.add_option('--refi', action='store_true', default=False, dest='refi')
+
+    # EXPENSES HERE
+    parser.add_option('--vacancy', action='store', dest='vacancy_rate')
+    parser.add_option('--repair', action='store', dest='repair_rate')
+    parser.add_option('--management', action='store', dest='management_rate')
+    parser.add_option('--capex', action='store', dest='capex_rate')
+    parser.add_option('--elec', action='store', dest='electric')
+    parser.add_option('--water', action='store', dest='water')
+    parser.add_option('--gas', action='store', dest='gas')
+    parser.add_option('--closing_cost', action='store', dest='closing_cost')
 
     # CALCULATION OPTIONS HERE
     parser.add_option('--calculation', action='store', dest='calculation', default='traditionals')
@@ -56,6 +65,7 @@ def set_settings():
             'sender_pass': os.getenv('SENDER_PASS')
         },
         'mortgage_calc_url': os.getenv('MORTGAGE_CALCULATOR_URL'),
+        'zillow_url': os.getenv('ZILLOW_URL'),
         'last_run': os.getenv('LAST_RUN')
     }
 
@@ -77,7 +87,7 @@ class Collector:
             search_task = search.SearchPropertiesTask(log=self.log, collector=self)
             process_task = process.ProcessPropertiesTask(log=self.log, collector=self)
 
-        return [search_task, process_task]
+        return [search_task, process_task]  # , process_task]
 
     def report_error(self, data):
 
