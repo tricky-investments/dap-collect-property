@@ -1,9 +1,0 @@
-INFO|Getting property data.|2021-09-26 13:21:02.968559
-INFO|Retrieved property data from Realty in US Api (Realtor) from RapidApi.|2021-09-26 13:21:03.751050
-INFO|Formatted property data.|2021-09-26 13:21:03.756086
-INFO|Getting area data.|2021-09-26 13:21:03.756123
-INFO|Retreived area data from US Real Estate Api from RapidApi.|2021-09-26 13:21:05.864168
-INFO|Formatted area data.|2021-09-26 13:21:05.864247
-INFO|Calculating mortgage payments.|2021-09-26 13:21:05.864267
-INFO|Calculating mortgage for 12 Anderson St, Morristown NJ, 07960.|2021-09-26 13:21:05.864303
-INFO|Calculated Mortgage payments.|2021-09-26 13:21:06.153996
