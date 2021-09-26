@@ -15,7 +15,7 @@ def main():
     collect.grab_collector_options(opt_parser)
     (options, args) = opt_parser.parse_args()
 
-    log = logging.Log()
+    log = logging.Log(settings['log_file'])
     collector = collect.Collector(log=log)
 
     if options.development:
@@ -38,7 +38,6 @@ def main():
                     break
 
             except Exception as e:
-                raise e
                 log.error(str(e))
                 collector.report_error({'error': str(e)})
                 break
@@ -55,6 +54,8 @@ def main():
         except Exception as e:
             log.error(str(e))
             collector.report_error({'error': str(e)})
+
+    log.commit()
 
 
 def grab_options(parser: OptionParser):

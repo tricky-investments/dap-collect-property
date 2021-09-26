@@ -1,9 +1,16 @@
 import datetime
+import os
 from abc import ABC
 
 from .helpers import calculator, externals
 
 from lib.abstract import Task
+
+
+def export_last_run(app_data_path, dt):
+    string_dt = str(dt)
+    with open(os.path.join(app_data_path, 'last_run.txt'), 'w') as f:
+        f.write(string_dt)
 
 
 class SearchPropertiesTask(Task):
@@ -16,6 +23,7 @@ class SearchPropertiesTask(Task):
         self.realty_in_us_config = settings['realty_in_us_config']
         self.us_real_estate_config = settings['us_real_estate_config']
         self.mortgage_calc_url = settings['mortgage_calc_url']
+        self.app_data_path = settings['app_data_path']
         self.last_run = datetime.datetime.fromisoformat(settings['last_run'])
 
     def load_parameters(self, params):
@@ -51,10 +59,14 @@ class SearchPropertiesTask(Task):
             if key in params.keys():
                 self.kpis.update({key: params[key]})
 
+    def _update_last_run(self, now):
+        with open(os.path.join(self.app_data_path, 'last_run.txt'), 'w') as f:
+            f.write(str(now))
+
     def run(self):
 
         success = True
-
+        data = {}
         """
         COLLECT PROPERTIES
 
@@ -73,6 +85,7 @@ class SearchPropertiesTask(Task):
         if response != 200:
             return False, {'error': f'{self.TASK_NAME}: {realty_in_us.name}: {str(response)}: {data}'}
 
+        export_last_run(self.app_data_path, datetime.datetime.now())
         self.log.ok(f'Retrieved property data from {realty_in_us.API_NAME}.')
 
         properties = []
@@ -99,6 +112,8 @@ class SearchPropertiesTask(Task):
             }
 
             properties.append(formatted_prop)
+
+        self._update_last_run(now)
 
         self.log.ok('Formatted property data.')
 

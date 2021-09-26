@@ -66,7 +66,9 @@ def set_settings():
         },
         'mortgage_calc_url': os.getenv('MORTGAGE_CALCULATOR_URL'),
         'zillow_url': os.getenv('ZILLOW_URL'),
-        'last_run': os.getenv('LAST_RUN')
+        'last_run': os.getenv('LAST_RUN'),
+        'app_data_path': os.getenv('APP_DATA_PATH'),
+        'log_file': os.getenv('LOG_FILE')
     }
 
     return settings
