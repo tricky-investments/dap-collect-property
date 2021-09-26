@@ -130,7 +130,7 @@ class SearchPropertiesTask(Task):
         if response != 200:
             return False, {'error': f'{self.TASK_NAME}: {us_real_estate.name}: {str(response)}: {data}'}
 
-        self.log.ok(f'Retreived area data from {us_real_estate.API_NAME}.')
+        self.log.ok(f'Retrieved area data from {us_real_estate.API_NAME}.')
         data = data['data']
 
         area = {

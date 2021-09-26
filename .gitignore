@@ -1,2 +1,6 @@
 venv/
 .env
+.sh
+.log
+logs/
+.idea
