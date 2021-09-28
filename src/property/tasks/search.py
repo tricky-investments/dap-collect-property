@@ -7,12 +7,6 @@ from .helpers import calculator, externals
 from lib.abstract import Task
 
 
-def export_last_run(app_data_path, dt):
-    string_dt = str(dt)
-    with open(os.path.join(app_data_path, 'last_run.txt'), 'w') as f:
-        f.write(string_dt)
-
-
 class SearchPropertiesTask(Task):
     TASK_NAME = "Property Search Task"
 
@@ -24,7 +18,7 @@ class SearchPropertiesTask(Task):
         self.us_real_estate_config = settings['us_real_estate_config']
         self.mortgage_calc_url = settings['mortgage_calc_url']
         self.app_data_path = settings['app_data_path']
-        self.last_run = datetime.datetime.fromisoformat(settings['last_run'])
+        self.last_run = datetime.datetime.strptime(settings['last_run'], '%Y-%m-%dT%H:%M:%SZ')
 
     def load_parameters(self, params):
 
@@ -48,7 +42,8 @@ class SearchPropertiesTask(Task):
                 self.mortgage_params.update({key: params[key]})
 
         self.expenses = {}
-        keys = ['closing_cost', 'vacancy_rate', 'repair_rate', 'management_rate', 'capex_rate', 'electric', 'water', 'gas']
+        keys = ['closing_cost', 'vacancy_rate', 'repair_rate', 'management_rate', 'capex_rate', 'electric', 'water',
+                'gas']
         for key in keys:
             if key in params.keys():
                 self.expenses.update({key: params[key]})
@@ -85,7 +80,6 @@ class SearchPropertiesTask(Task):
         if response != 200:
             return False, {'error': f'{self.TASK_NAME}: {realty_in_us.name}: {str(response)}: {data}'}
 
-        export_last_run(self.app_data_path, datetime.datetime.now())
         self.log.ok(f'Retrieved property data from {realty_in_us.API_NAME}.')
 
         properties = []
@@ -93,23 +87,26 @@ class SearchPropertiesTask(Task):
             updated = datetime.datetime.strptime(prop['last_update'], '%Y-%m-%dT%H:%M:%SZ')
             if (updated + datetime.timedelta(hours=1)) < self.last_run:
                 continue
-
-            formatted_prop = {
-                'property_id': prop['property_id'],
-                'listing_id': prop['listing_id'],
-                'link': prop['rdc_web_url'],
-                'prop_type': prop['prop_type'],
-                'address': prop['address'],
-                'address_formatted': prop['address']['line'] + ', ' + prop['address']['city'] + ' ' + \
-                                     prop['address']['state_code'] + ', ' + prop['address']['postal_code'],
-                'price': prop['price'],
-                'beds': prop['beds'],
-                'baths': prop['baths'],
-                'agents': prop['agents'],
-                'office': prop['office'],
-                'last_update': prop['last_update'],
-                'mls': prop['mls']
-            }
+            try:
+                formatted_prop = {
+                    'property_id': prop['property_id'],
+                    'listing_id': prop['listing_id'],
+                    'link': prop['rdc_web_url'],
+                    'prop_type': prop.get('prop_type', None),
+                    'address': prop['address'],
+                    'address_formatted': prop['address']['line'] + ', ' + prop['address']['city'] + ' ' + \
+                                         prop['address']['state_code'] + ', ' + prop['address']['postal_code'],
+                    'price': prop['price'],
+                    'beds': prop.get('beds', None),
+                    'baths': prop.get('baths', None),
+                    'agents': prop.get('baths', None),
+                    'office': prop.get('baths', None),
+                    'last_update': prop['last_update'],
+                    'mls': prop['mls']
+                }
+            except Exception as e:
+                return not success, {'error': f'Property was skipped due to lack of info in '
+                                              f'{self.realty_in_us_params["city"]}. Error : {str(e)}'}
 
             properties.append(formatted_prop)
 
@@ -253,7 +250,8 @@ class SearchPropertiesTask(Task):
                 'electric': float(self.expenses['electric']),
                 'water': float(self.expenses['water']),
                 'gas': float(self.expenses['gas']),
-                'monthly_income': float(self.kpis['monthly_income']) if self.kpis['monthly_income'] is not None else None,
+                'monthly_income': float(self.kpis['monthly_income']) if self.kpis[
+                                                                            'monthly_income'] is not None else None,
                 'cap_rate': float(self.kpis['cap_rate']) if self.kpis['cap_rate'] is not None else None,
                 'roi': float(self.kpis['roi']) if self.kpis['roi'] is not None else None,
                 'grm': float(self.kpis['grm']) if self.kpis['grm'] is not None else None,
@@ -271,14 +269,14 @@ class SearchPropertiesTask(Task):
                 'MLS Name': prop['mls']['name'],
                 'MLS ID': prop['mls']['id'],
                 'Estimated Mortgage': prop['mortgage'],
-                'Closing Costs': float(self.expenses['closing_cost'])*float(prop['price']),
+                'Closing Costs': float(self.expenses['closing_cost']) * float(prop['price']),
                 'link': prop['link']
             }
 
             if self.mortgage_params['downpayment_type'] == 'money':
                 process_prop.update({'Downpayment': self.mortgage_params['downpayment']})
             else:
-                process_prop.update({'Downpayment': float(self.mortgage_params['downpayment'])*float(prop['price'])})
+                process_prop.update({'Downpayment': float(self.mortgage_params['downpayment']) * float(prop['price'])})
 
             for kpi in kpis:
                 if kpi == 'cap_rate':
