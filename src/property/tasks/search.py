@@ -18,7 +18,7 @@ class SearchPropertiesTask(Task):
         self.us_real_estate_config = settings['us_real_estate_config']
         self.mortgage_calc_url = settings['mortgage_calc_url']
         self.app_data_path = settings['app_data_path']
-        self.last_run = datetime.datetime.fromisoformat(settings['last_run'])
+        self.last_run = datetime.datetime.strptime(settings['last_run'], '%Y-%m-%dT%H:%M:%SZ')
 
     def load_parameters(self, params):
 
