@@ -105,8 +105,7 @@ class SearchPropertiesTask(Task):
                     'mls': prop['mls']
                 }
             except Exception as e:
-                return not success, {'error': f'Property was skipped due to lack of info in '
-                                              f'{self.realty_in_us_params["city"]}. Error : {str(e)}'}
+                return not success, {'error': 'Property was skipped due to lack of info at ' + f'{formatted_prop["address"] if "address" in formatted_prop.keys() else self.realty_in_us_params["city"]}. Error : {str(e)}'}
 
             properties.append(formatted_prop)
 
